@@ -6,6 +6,7 @@ from fastapi import UploadFile, File, Form
 from aws import upload_image_on_s3, delete_image_on_s3
 from db import page_collection
 from schemas import Page
+from typing import List
 
 
 def fetch_page(id: str):
@@ -71,3 +72,11 @@ def remove_page(id: str) -> None:
 
     except Exception as e:
         print(f"Unexpected error: {e}")
+
+
+def generate_page_content_options(source: str, pages_id_list: List[str], first: bool) -> List[str]:
+    if first:
+        # TODO: GPT에서 문장 1개 생성 후 리턴
+        return ["문장 1"]
+    # TODO: GPT에서 문장 3개 생성 후 리턴
+    return ["문장 1", "문장 2", "문장 3"]

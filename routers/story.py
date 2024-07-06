@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from fastapi import APIRouter, File, UploadFile, Form
 
@@ -9,12 +9,12 @@ router = APIRouter(tags=['story'])
 
 
 @router.get("/api/stories/{id}")
-async def get_stories(id: int) -> Story:
+async def get_stories(id: int) -> Dict:
     return fetch_story(id)
 
 
 @router.get("/api/stories")
-async def get_stories() -> List[Story]:
+async def get_stories() -> List[Dict]:
     return fetch_all_stories()
 
 @router.post("/api/stories/init")

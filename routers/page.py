@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
-from cruds.page_crud import fetch_page, save_page, edit_page, remove_page
+from typing import Optional, List
+
+from fastapi import APIRouter, UploadFile, File, Form
+
+from cruds.page_crud import fetch_page, save_page, edit_page, remove_page, generate_page_content_options
 from schemas import Page
-from typing import Optional, Annotated
 
 router = APIRouter(tags=['page'])
 
@@ -30,3 +32,9 @@ async def update_page(
 @router.delete("/{id}")
 async def delete_page(id: str) -> None:
     remove_page(id)
+
+
+@router.post("/content/options/generator")
+async def content_generator(source: str, pages_id_list: Optional[List[str]], first: Optional[bool] = False) -> List[str]:
+    page_content_options = generate_page_content_options(source, pages_id_list, first)
+    return page_content_options
