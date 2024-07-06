@@ -32,7 +32,11 @@ def generate_object_key(file):
 def delete_image_on_s3(url: str):
     # TODO s3에서 이미지 삭제
     key = extract_object_key(url)
-    s3.delete_object(Bucket=BUCKET, Key=key)
+    try:
+        s3.delete_object(Bucket=BUCKET, Key=key)
+    except Exception as e:
+        print(f"Failed to delete image on S3: {e}")
+        return
 
 
 def extract_object_key(url: str):

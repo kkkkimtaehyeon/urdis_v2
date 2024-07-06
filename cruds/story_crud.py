@@ -48,7 +48,8 @@ def save_story(title, cover_image, source, pages_id_list) -> str:
 
     return str(saved_story.inserted_id)
 
-# TODO source도 삭제
+
+# TODO: source도 삭제
 def remove_story(id: str) -> None:
     try:
         story = story_collection.find_one({'_id': ObjectId(id)})
@@ -58,14 +59,11 @@ def remove_story(id: str) -> None:
 
         pages_id_list = story["pages_id_list"]
 
-        try:
-            delete_image_on_s3(story["cover_image_url"])
-        except Exception as e:
-            print(f"Failed to delete image on S3: {e}")
-            return
+        delete_image_on_s3(story["cover_image_url"])
 
         try:
             story_collection.delete_one({'_id': ObjectId(id)})
+            # 페이지 삭제
             for page_id in pages_id_list:
                 remove_page(page_id)
         except Exception as e:
@@ -74,6 +72,3 @@ def remove_story(id: str) -> None:
 
     except Exception as e:
         print(f"Unexpected error: {e}")
-
-
-
