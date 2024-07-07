@@ -23,3 +23,23 @@ class Page(BaseModel):
     content: str
     image_url: str
 
+
+class PageMetadata(BaseModel):
+    content_options: List[str]
+    selected_content_index: int
+    selected_content: str
+    image_url_options: List[str] = Field(default=None)
+    selected_image_url_index: int = Field(default=None)
+    selected_image_url: str = Field(default=None)
+
+
+class PageContentSaveRequest(BaseModel):
+    content_options: List[str]
+    selected_content_index: int
+    selected_content: str
+
+
+class PageImageSaveRequest(BaseModel):
+    image_url_options: List[str]
+    selected_image_url_index: int
+    selected_image_url: str

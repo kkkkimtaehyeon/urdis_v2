@@ -17,6 +17,9 @@ def fetch_page(id: str):
     }
 
 
+def save_page_content(content_options: List[str]):
+    pass
+
 def save_page(content: str, image_file: UploadFile = File()):
     image_url = upload_image_on_s3(image_file)
     page = Page(content=content, image_url=image_url)
@@ -58,11 +61,7 @@ def remove_page(id: str) -> None:
 
         image_url = page['image_url']
 
-        try:
-            delete_image_on_s3(url=image_url)
-        except Exception as e:
-            print(f"Failed to delete image on S3: {e}")
-            return
+        delete_image_on_s3(url=image_url)
 
         try:
             page_collection.delete_one({'_id': ObjectId(id)})
@@ -74,9 +73,13 @@ def remove_page(id: str) -> None:
         print(f"Unexpected error: {e}")
 
 
-def generate_page_content_options(source: str, pages_id_list: List[str], first: bool) -> List[str]:
+def generate_page_content_options(source: str, pages_id_list: List[str], first: bool):
     if first:
         # TODO: GPT에서 문장 1개 생성 후 리턴
-        return ["문장 1"]
+        gpt_response = ["문장 1"]
+        return
     # TODO: GPT에서 문장 3개 생성 후 리턴
     return ["문장 1", "문장 2", "문장 3"]
+
+
+
