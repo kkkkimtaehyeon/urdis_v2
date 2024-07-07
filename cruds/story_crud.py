@@ -1,11 +1,10 @@
-from typing import Optional
+from typing import List
 
 from bson import ObjectId
 
-from aws import upload_image_on_s3, delete_image_on_s3
-from db import story_collection, story_meta_collection
-from schemas import Story
 from cruds.page_crud import remove_page
+from db import story_collection, story_meta_collection
+from workers.page import save_page, save_last_page
 
 
 def fetch_story(id: str):
@@ -51,50 +50,28 @@ def init_story(source: str):
     }
 
 
-def save_story_page(story_id: str, selected_content_option: str, last_page: Optional[bool]):
-    if last_page:
-        story = story_collection.find_one_and_update(
-            {"_id": ObjectId(story_id)},
-            {"$push": {
-                "page_contents": selected_content_option
-            }})
+def save_story_page(story_id: str, page_index: str, selected_content_option: str):
+    # 마지막 페이지이면 표지 URL 반환
+    if page_index is "10":
+        return save_last_page(story_id, selected_content_option)
 
-        # TODO: 달리한테 이미지 생성 요청
-        # TODO: 생성된 이미지 S3 업로드
-        cover_image_url_options = ["url1", "url2", "url3"]
+    return save_page(story_id, page_index)
 
-        meta_id = story['meta_id']
-        story_meta_collection.update_one(
-            {"_id": ObjectId(meta_id)},
-            {"$set": {"cover_image_url_options": cover_image_url_options}},
-        )
 
-        return {
-            "story_id": story_id,
-            "cover_image_url_options": cover_image_url_options
-        }
+def fetch_story_contents(story_id: str) -> List[str]:
+    story = story_collection.find_one({'_id': ObjectId(story_id)})
+    page_contents = story["page_contents"]
 
-    story = story_collection.find_one_and_update(
-        {"_id": ObjectId(story_id)},
-        {"$push": {
-            "page_contents": selected_content_option
-        }})
+    return page_contents
 
-    selected_contents = story['page_contents']
-    meta_id = story['meta_id']
-    print(selected_contents)
-    # TODO: gpt 문장 옵션 생성에 필요한 파라미터 -> selected_contents
-    content_options = ["문장 옵션 1", "문장 옵션 2", "문장 옵션 3"]  # GPT가 생성한 문장
 
-    story_meta_collection.update_one(
-        {"_id": ObjectId(meta_id)},
-        {"$push": {"page_content_options": content_options}},
+def confirm_story_contents(story_id: str, confirm_contents: List[str]) -> str:
+    story_collection.find_one_and_update(
+        {'_id': ObjectId(story_id)},
+        {"$set": {"page_contents": confirm_contents}}
     )
 
-    return {
-        "story_id": story_id,
-        "content_options": content_options
-    }
+    return story_id
 
 
 def finalize_save_story(story_id: str, title: str, cover_image_url: str):
@@ -109,39 +86,12 @@ def finalize_save_story(story_id: str, title: str, cover_image_url: str):
     return story_id
 
 
-def save_story(title, cover_image, source, pages_id_list) -> str:
-    cover_image_url = upload_image_on_s3(file=cover_image)
-    story = Story(
-        title=title,
-        cover_image_url=cover_image_url,
-        source=source,
-        pages_id_list=pages_id_list[0].split(",")
-    )
-    saved_story = story_collection.insert_one(dict(story))
+def remove_story(story_id: str) -> None:
+    deleted_story = story_collection.find_one_and_delete({"_id": ObjectId(story_id)})
+    meta_id = deleted_story["meta_id"]
 
-    return str(saved_story.inserted_id)
+    remove_story_meta(meta_id)
 
 
-# TODO: source도 삭제
-def remove_story(id: str) -> None:
-    try:
-        story = story_collection.find_one({'_id': ObjectId(id)})
-        if story is None:
-            print(f"Story with id {id} not found.")
-            return
-
-        pages_id_list = story["pages_id_list"]
-
-        delete_image_on_s3(story["cover_image_url"])
-
-        try:
-            story_collection.delete_one({'_id': ObjectId(id)})
-            # 페이지 삭제
-            for page_id in pages_id_list:
-                remove_page(page_id)
-        except Exception as e:
-            print(f"Failed to delete story from collection: {e}")
-            return
-
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+def remove_story_meta(meta_id: str):
+    story_meta_collection.delete_one({"_id": ObjectId(meta_id)})
