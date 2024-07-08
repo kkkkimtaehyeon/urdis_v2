@@ -1,22 +1,21 @@
-from typing import List
+from typing import List, Dict
 
 from fastapi import APIRouter
 
-from fastapi import APIRouter
-
-from cruds.story_crud import init_story, save_story_page, fetch_story_contents, finalize_save_story, confirm_story_contents, remove_story
+from cruds.story_crud import init_story, save_story_page, fetch_story_contents, finalize_save_story, \
+    confirm_story_contents, remove_story, fetch_story, fetch_all_stories
 
 router = APIRouter(tags=['story'])
 
 
-# @router.get("/api/stories/{id}")
-# async def get_stories(id: int) -> Dict:
-#     return fetch_story(id)
-#
-#
-# @router.get("/api/stories")
-# async def get_stories() -> List[Dict]:
-#     return fetch_all_stories()
+@router.get("/api/stories/{story_id}")
+async def get_stories(story_id: str) -> Dict:
+    return fetch_story(story_id)
+
+
+@router.get("/api/stories")
+async def get_stories() -> List[Dict]:
+    return fetch_all_stories()
 
 
 @router.post("/api/stories/init")

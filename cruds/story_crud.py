@@ -2,32 +2,22 @@ from typing import List
 
 from bson import ObjectId
 
-from cruds.page_crud import remove_page
 from db import story_collection, story_meta_collection
 from workers.page import save_page, save_last_page
 
 
 def fetch_story(id: str):
     story = story_collection.find_one({'_id': ObjectId(id)})
-    return {
-        "id": str(story["_id"]),
-        "title": story["title"],
-        "cover_image_url": story["cover_image_url"],
-        "page_count": story["page_count"],
-        "created_date": story["created_date"],
-        "pages_id_list": story["pages_id_list"]
-    }
+    story['_id'] = str(story['_id'])
+    return dict(story)
 
 
 def fetch_all_stories():
     stories = story_collection.find()
     return [{
-        "id": str(story["_id"]),
+        "_id": str(story["_id"]),
         "title": story["title"],
-        "cover_image_url": story["cover_image_url"],
-        "page_count": story["page_count"],
-        "created_date": story["created_date"],
-        "pages_id_list": story["pages_id_list"]
+        "cover_image_url": story["cover_image_url"]
     } for story in stories]
 
 
@@ -52,7 +42,7 @@ def init_story(source: str):
 
 def save_story_page(story_id: str, page_index: str, selected_content_option: str):
     # 마지막 페이지이면 표지 URL 반환
-    if page_index is "10":
+    if page_index == "10":
         return save_last_page(story_id, selected_content_option)
 
     return save_page(story_id, page_index)

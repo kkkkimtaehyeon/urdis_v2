@@ -20,6 +20,7 @@ def fetch_page(id: str):
 def save_page_content(content_options: List[str]):
     pass
 
+
 def save_page(content: str, image_file: UploadFile = File()):
     image_url = upload_image_on_s3(image_file)
     page = Page(content=content, image_url=image_url)
