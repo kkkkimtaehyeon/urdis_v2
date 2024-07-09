@@ -8,8 +8,7 @@ client = MongoClient(MONGODB_URL)
 
 db = client.story_generator_db
 
-source_collection = db['source_collection']
 story_collection = db['story_collection']
 story_meta_collection = db['story_meta_collection']
-page_collection = db['page_collection']
+voice_collection = db['voice_collection']
 

@@ -1,87 +1,91 @@
-from typing import List
-
+from typing import List, Dict
+import datetime
 from bson import ObjectId
 
 from db import story_collection, story_meta_collection
-from workers.page import save_page, save_last_page
 
 
-def fetch_story(id: str):
-    story = story_collection.find_one({'_id': ObjectId(id)})
-    story['_id'] = str(story['_id'])
-    return dict(story)
-
-
-def fetch_all_stories():
+def fetch_all_stories() -> List[Dict]:
     stories = story_collection.find()
-    return [{
-        "_id": str(story["_id"]),
-        "title": story["title"],
-        "cover_image_url": story["cover_image_url"]
-    } for story in stories]
+    return stories
 
 
-def init_story(source: str):
-    # TODO: gpt 문장 옵션 생성에 필요한 파라미터 -> source
-    content_options = ["문장1"]  # GPT가 생성한 문장
+# TODO
+def fetch_story(story_id: str) -> Dict:
+    story = story_collection.find_one({"_id": ObjectId(story_id)})
 
-    meta = story_meta_collection.insert_one({
-        "page_content_options": content_options
-    })
-
-    inited_story = story_collection.insert_one({
-        "source": source,
-        "meta_id": str(meta.inserted_id)
-    })
-
-    return {
-        "story_id": str(inited_story.inserted_id),
-        "content_options": content_options
-    }
+    return story
 
 
-def save_story_page(story_id: str, page_index: str, selected_content_option: str):
-    # 마지막 페이지이면 표지 URL 반환
-    if page_index == "10":
-        return save_last_page(story_id, selected_content_option)
+def init_story(source_prompt: str):
+    # TODO: gpt가 source_prompt를 파라미터로 문장 하나를 생성하고 반환
+    gpt_response = ["문장1"]
+    story_meta = story_meta_collection.insert_one(
+        {
+            "source": source_prompt,
+            "contents": gpt_response
+        })
 
-    return save_page(story_id, page_index)
+    story = story_collection.insert_one({"story_meta_id": str(story_meta.inserted_id)})
+
+    story_id = str(story.inserted_id)
+
+    return story_id
+
+
+def finalize_story(story_id: str, title: str, author: str, cover_image: str):
+    now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    story_collection.update_one(
+        {'_id': ObjectId(story_id)},
+        {'$set': {'title': title, 'author': author, 'cover_image': cover_image, 'created_date': now_time}},
+    )
+
+
+def show_content_options(story_id: str, content_index: int) -> List[str]:
+    story = story_collection.find_one({"_id": ObjectId(story_id)})
+    story_meta = story_meta_collection.find_one({"_id": ObjectId(story['story_meta_id'])})
+
+    return story_meta['contents'][content_index - 1]
+
+
+def select_content_option(story_id: str, content_index: int, selected_option_content: str, selected_option_index: int):
+    story = story_collection.find_one_and_update(
+        {"_id": ObjectId(story_id)},
+        {"$push": {"contents": selected_option_content}},
+    )
+
+    if content_index < 10:
+        # TODO: gpt가 source_prompt를 파라미터로 문장 3개를 생성하고 반환
+        gpt_response = ["문장1", "문장2", "문장3"]
+
+        story_meta_collection.update_one(
+            {"_id": ObjectId(story['story_meta_id'])},
+            {"$push": {"contents": gpt_response}},
+            upsert=True
+        )
+
+    return story_id
 
 
 def fetch_story_contents(story_id: str) -> List[str]:
-    story = story_collection.find_one({'_id': ObjectId(story_id)})
-    page_contents = story["page_contents"]
+    story = story_collection.find_one({"_id": ObjectId(story_id)})
 
-    return page_contents
-
-
-def confirm_story_contents(story_id: str, confirm_contents: List[str]) -> str:
-    story_collection.find_one_and_update(
-        {'_id': ObjectId(story_id)},
-        {"$set": {"page_contents": confirm_contents}}
-    )
-
-    return story_id
+    return story['contents']
 
 
-def finalize_save_story(story_id: str, title: str, cover_image_url: str):
-    story_collection.update_one(
+def confirm_contents(story_id: str, contents: List[str]):
+    story = story_collection.find_one_and_update(
         {"_id": ObjectId(story_id)},
-        {"$set": {
-            "title": title,
-            "cover_image_url": cover_image_url
-        }}
+        {"$set": {"contents": contents}}
+    )
+
+    # TODO: 스토리 기반으로 10페이지 * 4개의 이미지 생성 -> s3 업로드 -> 이미지 URL 스토리 메타데이터에 저장
+    # 이미지 저장할 때 같은 페이지에서 생성되는 이미지는 상관 없지만 페이지의 순서는 보장되어야 함
+    uploaded_image_urls = [["url1", "url2", "url3", "url4"] for index in range(0, 10)]
+
+    story_meta_collection.find_one_and_update(
+        {"_id": ObjectId(story['story_meta_id'])},
+        {"$set": {"images": uploaded_image_urls}}
     )
 
     return story_id
-
-
-def remove_story(story_id: str) -> None:
-    deleted_story = story_collection.find_one_and_delete({"_id": ObjectId(story_id)})
-    meta_id = deleted_story["meta_id"]
-
-    remove_story_meta(meta_id)
-
-
-def remove_story_meta(meta_id: str):
-    story_meta_collection.delete_one({"_id": ObjectId(meta_id)})

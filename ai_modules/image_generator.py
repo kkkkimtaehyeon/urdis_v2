@@ -1,5 +1,5 @@
 from typing import List
-from aws import upload_image_on_s3
+from aws import upload_on_s3
 
 
 def generate_cover_from_contents(page_contents: List[str]) -> List[str]:
