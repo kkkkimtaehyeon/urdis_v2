@@ -1,12 +1,15 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import datetime
 from bson import ObjectId
 
 from db import story_collection, story_meta_collection
 
 
-def fetch_all_stories() -> List[Dict]:
-    stories = story_collection.find()
+def fetch_all_stories(keyword: Optional[str] = None) -> List[Dict]:
+    if keyword is None:
+        stories = story_collection.find()
+    else:
+        stories = story_collection.find({'title': {'$regex': keyword}})
     return stories
 
 
@@ -89,3 +92,9 @@ def confirm_contents(story_id: str, contents: List[str]):
     )
 
     return story_id
+
+
+def fetch_page(story_id: str, page_index: int):
+    story = story_collection.find_one({"_id": ObjectId(story_id)})
+
+    return story['contents'][page_index - 1], story['images'][page_index - 1]

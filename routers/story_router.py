@@ -1,16 +1,16 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from fastapi import APIRouter
 
 from cruds.story_crud import fetch_all_stories, fetch_story, init_story, show_content_options, select_content_option, \
-    fetch_story_contents, confirm_contents, finalize_story
+    fetch_story_contents, confirm_contents, finalize_story, fetch_page
 from schemas import Source, OptionSelector, ContentsReviewer, StoryFinalizer
 router = APIRouter(tags=["story"])
 
 
 @router.get("/api/stories")  # 전체 동화 조회
-async def get_all_stories() -> List[Dict[str, Any]]:
-    stories = fetch_all_stories()
+async def get_all_stories(keyword: Optional[str] = None) -> List[Dict[str, Any]]:
+    stories = fetch_all_stories(keyword)
 
     return [{
         "story_id": str(story["_id"]),
@@ -82,3 +82,12 @@ async def confirm_story_contents(story_id: str, contents_reviewer: ContentsRevie
 
     return story_id
 
+
+@router.get("/api/stories/{story_id}/pages/{page_index}")
+async def read_page(story_id: str, page_index: int):
+    content, image = fetch_page(story_id, page_index)
+
+    return {
+        "contents": content,
+        "image": image
+    }
