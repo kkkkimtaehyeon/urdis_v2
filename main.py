@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import story_router, image_router
+from routers import story_router, image_router, voice_router, socket_router
 
 app = FastAPI()
 
@@ -16,6 +16,7 @@ app.add_middleware(
 
 app.include_router(story_router.router)
 app.include_router(image_router.router)
+app.include_router(voice_router.router)
 
 
 if __name__ == "__main__":

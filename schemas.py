@@ -33,3 +33,10 @@ class StoryResponse(BaseModel):
     cover_image: str
     contents: List[str]
     images: List[str]
+
+
+class Voice(BaseModel):
+    name: str
+    image: str
+    audio_sample: str
+    voice_model: str
