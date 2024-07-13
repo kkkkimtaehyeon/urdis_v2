@@ -40,3 +40,9 @@ class Voice(BaseModel):
     image: str
     audio_sample: str
     voice_model: str
+
+
+class UserOptions(BaseModel):
+    options: List[str]
+    selected_option_index: int
+

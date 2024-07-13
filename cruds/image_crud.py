@@ -3,6 +3,10 @@ from typing import List
 from bson import ObjectId
 
 from db import story_collection, story_meta_collection
+from aws import S3Manager
+
+
+s3 = S3Manager()
 
 
 def show_content_with_images(story_id: str, page: int) -> tuple:
@@ -26,6 +30,10 @@ def select_images(story_id: str, selected_options_index: List[int]):
     )
 
     # TODO: 표지 이미지 생성 -> s3 업로드
+    # dalle_response = "base64_format_response"
+    # image_data = convert_base64_to_image(dalle_response)
+    # s3.upload_image_on_s3(image_data)
+
     uploaded_cover_images = ["cover_url1", "cover_url2", "cover_url3", "cover_url4"]
 
     story_meta_collection.update_one(
