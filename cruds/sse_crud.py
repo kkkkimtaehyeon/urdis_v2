@@ -1,9 +1,9 @@
 from typing import List
 
 from bson import ObjectId
+
 from db import story_meta_collection, story_collection
-from schemas import UserOptions, ImageSelect, ImageSelector
-from ai_modules.dalle_work import generate_images_from_contents
+from schemas import UserOptions, ImagesSelect
 
 
 def sse_init_story(source_prompt: str):
@@ -54,7 +54,7 @@ def sse_show_images(story_id: str, page_index: int):
     return story['contents'][page_index - 1], story_meta['images'][page_index - 1]
 
 
-def sse_select_image(story_id: str, image_select: ImageSelector):
+def sse_select_image(story_id: str, image_select: ImagesSelect):
     story = story_collection.find_one({"_id": ObjectId(story_id)})
 
     story_meta_collection.update_one(

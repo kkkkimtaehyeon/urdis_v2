@@ -16,29 +16,22 @@ def show_content_with_images(story_id: str, page: int) -> tuple:
     return story['contents'][page - 1], story_meta['images'][page - 1]
 
 
-def select_images(story_id: str, selected_options_index: List[int]):
-    story = story_collection.find_one({'_id': ObjectId(story_id)})
+def select_images(story_id: str, selected_images: List[str]):
+    story = story_collection.find_one_and_update(
+        {"_id": ObjectId(story_id)},
+        {"$set": {"images": selected_images}})
 
-    story_meta = story_meta_collection.find_one({'_id': ObjectId(story['story_meta_id'])})
-    images_list = story_meta['images']
-    selected_images = [images_list[i][selected_options_index[i]] for i in range(10)]
+    # 아직 이미지 하나만 뽑음, 여러 개 뽑게 수정 필요
+    # cover_images = generate_cover_images(story['contents'])
 
-    story_collection.update_one(
-        {'_id': ObjectId(story_id)},
-        {'$set': {'images': selected_images}},
-        upsert=True
-    )
-
-    # TODO: 표지 이미지 생성 -> s3 업로드
-    # dalle_response = "base64_format_response"
-    # image_data = convert_base64_to_image(dalle_response)
-    # s3.upload_image_on_s3(image_data)
-
-    uploaded_cover_images = ["cover_url1", "cover_url2", "cover_url3", "cover_url4"]
+    cover_images = ["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png",
+                    "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png",
+                    "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png",
+                    "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"]
 
     story_meta_collection.update_one(
         {'_id': ObjectId(story['story_meta_id'])},
-        {'$set': {'cover_images': uploaded_cover_images}},
+        {'$set': {'cover_images': cover_images}},
         upsert=True
     )
 
