@@ -46,3 +46,7 @@ class UserOptions(BaseModel):
     options: List[str]
     selected_option_index: int
 
+
+class ImageSelect(BaseModel):
+    selected_image: str
+    selected_index: int
