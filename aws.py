@@ -26,6 +26,12 @@ class S3Manager:
             aws_secret_access_key=self.AWS_SECRET_KEY
         )
 
+    def upload_audio_on_s3(self, audio_file: bytes, filename) -> str:
+        key = str(uuid.uuid4()) + "_" + filename
+        content_type = "audio/mp3"
+        self.s3.put_object(Body=audio_file, Bucket=self.BUCKET, Key=key, ContentType=content_type)
+        return f'https://{self.BUCKET}.s3.{self.REGION}.amazonaws.com/{key}'
+
     def upload_on_s3(self, file: UploadFile = File()) -> str:
         key = generate_object_key(file)
         content_type = file.content_type
