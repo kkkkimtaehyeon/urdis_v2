@@ -20,3 +20,7 @@ class UserOptions(BaseModel):
 
 class ImagesSelect(BaseModel):
     selected_images: List[str]
+
+
+class ContentsConfirm(BaseModel):
+    contents: List[str]

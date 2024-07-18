@@ -35,6 +35,7 @@ async def get_one_story(story_id) -> Dict:
         "cover_image": story['cover_image'],
         "contents": story['contents'],
         "images": story['images'],
+        "voices": story['contents_voices'],
         "created_date": story['created_date']
     }
 

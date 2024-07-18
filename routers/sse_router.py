@@ -1,10 +1,10 @@
-from typing import List
-
 from fastapi import APIRouter
-from pydantic import BaseModel
+from starlette.responses import StreamingResponse
 
+from ai_modules.gpt_work import test_generator
 from cruds.sse_crud import sse_init_story, sse_save_options_and_index, sse_confirm_contents
-from schemas import Source, UserOptions
+from cruds.story_crud import generate_gpt_messages
+from schemas import Source, UserOptions, ContentsConfirm
 
 router = APIRouter(tags=["sse"])
 
@@ -24,19 +24,9 @@ async def post_selected_option_with_options(story_id: str, current_page: int, op
 
 @router.get("/api/sse/stories/{story_id}/pages/{current_page}/contents")
 async def get_options_with_sse(story_id: str, current_page: int):
-    if current_page == 1:
-        # return StreamingResponse(text_stream(), media_type="text/event-stream")
-        return {
-            "options": ["선택지 1"]
-        }
+    messages = generate_gpt_messages(story_id, current_page)
 
-    return {
-        "options": ["선택지 1", "선택지 2", "선택지 3"]
-    }
-
-
-class ContentsConfirm(BaseModel):
-    contents: List[str]
+    return StreamingResponse(test_generator(messages), media_type="text/event-stream", headers={"Content-Encoding": "utf-8"})
 
 
 @router.post("/api/sse/stories/{story_id}/contents")

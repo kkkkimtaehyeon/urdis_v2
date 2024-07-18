@@ -29,7 +29,7 @@ async def post_new_voice(name: str = Form(...),
     return voice_id
 
 
-@router.post("/api/stories/{story_id}/voices")
+@router.post("/api/stories/{story_id}/voices/{voice_id}")
 async def apply_voice_on_story(story_id: str, voice_id: str):
     attach_voice_on_story(story_id, voice_id)
 

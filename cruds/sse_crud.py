@@ -2,6 +2,7 @@ from typing import List
 
 from bson import ObjectId
 
+from ai_modules.dalle_work import generate_images_from_contents
 from db import story_meta_collection, story_collection
 from schemas import UserOptions, ImagesSelect
 
@@ -35,8 +36,8 @@ def sse_confirm_contents(story_id: str, contents_list: List[str]):
         {"$set": {"contents": contents_list}},
         upsert=True
     )
-    # 아직 페이지 하나 당 하나의 이미지만 생성
-    # images = generate_images_from_contents(story['contents'])
+    # 이미지 2개 생성
+    #images = generate_images_from_contents(story['contents'])
 
     images = [["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"] for index in range(0, 10)]
 

@@ -2,6 +2,7 @@ from typing import List, Dict, Optional
 import datetime
 from bson import ObjectId
 
+from ai_modules.gpt_work import generate_prompt, generate_prompt_for_first
 from db import story_collection, story_meta_collection
 from schemas import UserOptions
 
@@ -97,8 +98,24 @@ def fetch_page(story_id: str, page_index: int):
     return story['contents'][page_index - 1], story['images'][page_index - 1]
 
 
+def generate_gpt_messages(story_id: str, current_page: int):
+    story = story_collection.find_one({"_id": ObjectId(story_id)})
+    story_meta = story_meta_collection.find_one({"_id": ObjectId(story['story_meta_id'])})
 
 
+    if current_page > 1:
+        contents_options = story_meta['contents']
+        selected_content_options = story_meta['selected_content_option']
+        selected_contents = []
+        for i in range(current_page-1):
+            selected_option_number = int(selected_content_options[i])
+            selected_contents.append(contents_options[i][selected_option_number])
 
+        #selected_contents = [story_meta['contents'][current_page - 1][selected_index] for selected_index in selected_content_options]
+
+        return generate_prompt(contents=selected_contents, page=current_page)
+
+    source = story_meta['source']
+    return generate_prompt_for_first(source)
 
 

@@ -39,16 +39,16 @@ def attach_voice_on_story(story_id: str, voice_id: str):
     voice_model = voice["voice_model"]
     contents_list = story["contents"]
 
-    # 페이지의 내용을 음성으로 변홚
-    # contents_voices = []
-    #
-    # for content in contents_list:
-    #     audio = text_to_speech(text=content, voice_name=voice_model)
-    #     uploaded_audio_url = s3.upload_on_s3(audio)
-    #     contents_voices.append(uploaded_audio_url)
+    #페이지의 내용을 음성으로 변홚
+    contents_voices = []
+
+    for content in contents_list:
+        audio = text_to_speech(text=content, voice_name=voice_model)
+        uploaded_audio_url = s3.upload_audio_on_s3(audio, str(story['_id']))
+        contents_voices.append(uploaded_audio_url)
 
     # 더미데이터
-    contents_voices = [f"voice_url{i}" for i in range(10)]
+    #contents_voices = [f"voice_url{i}" for i in range(10)]
 
     story_collection.update_one(
         {"_id": ObjectId(story_id)},

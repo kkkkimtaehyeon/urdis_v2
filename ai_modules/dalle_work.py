@@ -15,22 +15,26 @@ client = OpenAI(api_key=openai_api_key)
 
 def generate_image(prompt: str):
     response = client.images.generate(
-        model="dall-e-3",
+        model="dall-e-2",
         prompt=prompt,
         size="1024x1024",
         quality="standard",
-        n=1,
+        n=2,
     )
 
-    return response.data[0].url
+    return [image.url for image in response.data]
 
 
-def download_image_from_url(url):
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.content  # 이미지 데이터 반환
-    else:
-        raise Exception(f"Failed to download image from {url}. Status code: {response.status_code}")
+def download_image_from_url(urls: List[str]):
+    image_datas = []
+    for url in urls:
+        response = requests.get(url)
+        if response.status_code == 200:
+            image_datas.append(response.content)  # 이미지 데이터 반환
+        else:
+            raise Exception(f"Failed to download image from {url}. Status code: {response.status_code}")
+
+    return image_datas
 
 
 def generate_images_from_contents(contents: List[str]):
@@ -38,20 +42,27 @@ def generate_images_from_contents(contents: List[str]):
     contents_images = []
 
     for content in contents:
-        img_data = download_image_from_url(generate_image(content))
-        img_url = s3.upload_image_on_s3(img_data)
-        contents_images.append(img_url)
+        img_datas = download_image_from_url(generate_image(content))
+        img_urls = [s3.upload_image_on_s3(img_data) for img_data in img_datas]
+        contents_images.append(img_urls)
 
     return contents_images
 
 
-# 이미지 여러 개 뽑는 법은?
 def generate_cover_images(contents: List[str]):
     story = ', '.join(contents)
+    img_datas = download_image_from_url(generate_image(story))
 
-    img_data = download_image_from_url(generate_image(story))
-    return s3.upload_image_on_s3(img_data)
+    return [s3.upload_image_on_s3(img_data) for img_data in img_datas]
 
 
-sample_img = "https://oaidalleapiprodscus.blob.core.windows.net/private/org-hSYk9Q432nurwoMVLYJDpPRz/user-2bXD6y0WDFF4E32FXWAK3UE7/img-Z49uCRWGbgslTzuWSRqMoeBq.png?st=2024-07-14T14%3A45%3A24Z&se=2024-07-14T16%3A45%3A24Z&sp=r&sv=2023-11-03&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-07-14T01%3A23%3A56Z&ske=2024-07-15T01%3A23%3A56Z&sks=b&skv=2023-11-03&sig=nM2fE7y74orfpiyNfuI5AIDMSThbyWbjoKOyC7jrYnw%3D"
-# print(s3.upload_image_on_s3(download_image_from_url(sample_img)))
+
+response = client.images.generate(
+        model="dall-e-3",
+        prompt="오늘은 편의점에서 라면을 먹는 날이다. 지우는 아침부터 설레는 마음으로 일어났다. 오늘은 엄마와 함께 편의점에 가기로 한 날이기 때문이다. 지우는 엄마와 손을 잡고 집을 나섰다작은 마을에 사는 토끼 토미는 매주 금요일, 편의점에서 라면을 먹는 날을 손꼽아 기다렸어요. 안녕, 친구들이요! 오늘은 우리가 좋아하는 라면 날이에요",
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+
+print(response)
