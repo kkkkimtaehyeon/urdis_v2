@@ -5,6 +5,7 @@ from bson import ObjectId
 from ai_modules.dalle_work import generate_cover_images
 from db import story_collection, story_meta_collection
 from aws import S3Manager
+from ai_modules.gpt_work import summarizer, generate_summary_prompt
 
 
 s3 = S3Manager()
@@ -22,13 +23,20 @@ def select_images(story_id: str, selected_images: List[str]):
         {"_id": ObjectId(story_id)},
         {"$set": {"images": selected_images}})
 
-    #cover_images = generate_cover_images(story['contents'])
+    print("요약중...")
+    summarized_prompt = generate_summary_prompt(story['contents'])
+    summary = summarizer(summarized_prompt)
+    print("요약 완료.")
+
+    print("표지 생성중...")
+    cover_images = generate_cover_images(summary)
+    print("표지 생성 완료.")
 
     # 더미 데이터
-    cover_images = ["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png",
-                    "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png",
-                    "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png",
-                    "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"]
+    # cover_images = ["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png",
+    #                 "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png",
+    #                 "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png",
+    #                 "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"]
 
     story_meta_id = story['story_meta_id']
 

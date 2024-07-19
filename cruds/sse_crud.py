@@ -2,7 +2,7 @@ from typing import List
 
 from bson import ObjectId
 
-from ai_modules.dalle_work import generate_images_from_contents
+from ai_modules.dalle_work import generate_images_from_contents, s3
 from db import story_meta_collection, story_collection
 from schemas import UserOptions, ImagesSelect
 
@@ -39,7 +39,7 @@ def sse_confirm_contents(story_id: str, contents_list: List[str]):
     # 이미지 2개 생성
     #images = generate_images_from_contents(story['contents'])
 
-    images = [["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"] for index in range(0, 10)]
+    images = [["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/10a963f5-7bc9-43ef-8f2b-8e9e83042062", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/82de07e6-ab19-4248-8cf4-da931c6dd432"] for _ in range(0, 10)]
 
     story_meta_collection.update_one(
         {"_id": ObjectId(story['story_meta_id'])},
@@ -65,8 +65,8 @@ def sse_select_image(story_id: str, image_select: ImagesSelect):
 
     #
     # dalle_response = "base64_format_response"
-    # image_data = convert_base64_to_image(dalle_response)
-    # s3.upload_image_on_s3(image_data)
+    image_data = convert_base64_to_image(dalle_response)
+    s3.upload_image_on_s3(image_data)
 
     uploaded_cover_images = ["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png", "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"]
 
@@ -75,5 +75,4 @@ def sse_select_image(story_id: str, image_select: ImagesSelect):
         {'$set': {'cover_images': uploaded_cover_images}},
         upsert=True
     )
-
 
