@@ -41,6 +41,7 @@ def generate_prompt_for_first(source: str):
          '''}
     ]
 
+
 async def test_generator(messages):
     output = ""
     response = CLIENT.chat.completions.create(
@@ -117,3 +118,38 @@ async def test_generator(messages):
 
     print("data: [DONE]\n\n")
     yield "data: [DONE]\n\n"
+
+
+def generate_summary_prompt(contents: List[str]):
+    full_story = concat_contents(contents)
+
+    return [
+        {"role": "system", "content": """너는 동화삽화 제작을 위해 한문장으로 내용을 요약해주는 AI야."""},
+        {"role": "user", "content": f"동화 삽화 제작을 위해, 아래 문장을 한문장으로 요약해줘\n\n{full_story}"}]
+
+
+def summarizer(messages):
+    response = CLIENT.chat.completions.create(
+        # 모델 선언
+        model="gpt-4o-2024-05-13",
+        messages=messages,
+        stream=False,
+        # json 형태로 답변을 받기 위해 function call 형태 지정.
+        functions=[
+            {
+                "name": "generate_summarize",
+                # 없어도 되긴 함
+                "description": "Please summarize the contents in one sentence for the creation of fairy tale illustrations: 요약_결과",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "요약_결과": {"type": "string", "description": "Introduction of the story"},
+
+                    },
+                    "required": ["요약_결과"]
+                }
+            }
+        ],
+        function_call={"name": "generate_summarize", "arguments": "{\"요약_결과\": \"\"}"}
+    )
+    return json.loads(response.choices[0].message.function_call.arguments)['요약_결과']
