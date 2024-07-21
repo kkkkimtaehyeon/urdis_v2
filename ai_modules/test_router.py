@@ -3,9 +3,12 @@ import os
 from typing import List
 
 from dotenv import find_dotenv, load_dotenv
-from fastapi import Request, APIRouter
+from fastapi import Request, APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from openai import OpenAI
+from pydantic import BaseModel
+
+from ai_modules.dalle_work import test_generator
 
 _ = load_dotenv(find_dotenv())
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -118,3 +121,26 @@ async def generate_test(request: Request):
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(test_generator(), media_type="text/event-stream", headers={"Content-Encoding": "utf-8"})
+
+
+class DalleInput(BaseModel):
+    input: str
+
+
+@router.post("/test/background")
+async def background_dalle_test(dalle_input: DalleInput, background_tasks: BackgroundTasks):
+    input = dalle_input.input
+    print(input)
+
+    background_tasks.add_task(test_generator, input)
+
+    return {"message": "background working"}
+
+
+@router.post("/test/dalle")
+async def dalle_test(dalle_input: DalleInput):
+    print(input)
+    return test_generator(dalle_input.input)
+
+
+

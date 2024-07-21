@@ -2,11 +2,10 @@ from typing import List
 
 from bson import ObjectId
 
-from ai_modules.dalle_work import generate_cover_images
+from ai_modules.dalle_work import generate_cover_images, test_generator, get_data_from_url
 from db import story_collection, story_meta_collection
 from aws import S3Manager
 from ai_modules.gpt_work import summarizer, generate_summary_prompt
-
 
 s3 = S3Manager()
 
@@ -44,7 +43,6 @@ def select_images(story_id: str, selected_images: List[str]):
 
 
 def update_cover_images(story_meta_id: str, cover_images: List[str]):
-
     story_meta_collection.update_one(
         {'_id': ObjectId(story_meta_id)},
         {'$set': {'cover_images': cover_images}},
@@ -61,3 +59,15 @@ def show_cover_images(story_id: str) -> List[str]:
     return cover_images
 
 
+def update_generated_image_in_background(story_id: str, content: str):
+    image_url = test_generator(content)
+    image_data = get_data_from_url(image_url)
+    uploaded_url = s3.upload_image_on_s3(image_data)
+
+    story = story_collection.find_one({'_id': ObjectId(story_id)})
+
+    story_meta_collection.update_one(
+        {'_id': ObjectId(story['story_meta_id'])},
+        {"$push": {"images": uploaded_url}},
+        upsert=True
+    )

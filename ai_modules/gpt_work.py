@@ -21,7 +21,8 @@ def generate_prompt(contents: List[str], page: int):
     7살짜리 아이를 위한 동화를 작성하게 될거야. 총 10페이지의 동화를 작성하게 될거야."""},
         {"role": "user", "content": f'''지금까지의 이야기: ```{history}```
 
-    너는 총 10문단 중 {page}번째 문단을 작성해야 하고, 총 3개의 다음 문단 후보를 작성해줘. 답변해줘야 할 format은 다음과 같아.
+    너는 총 10문단 중 {page}번째 문단을 작성해야 하고, 총 3개의 다음 문단 후보를 50자 이내로 작성해줘. 답변해줘야 할 format은 다음과 같아.
+    
     {{'후보_1':"",
     '후보_2':"",
     '후보_3':""}}
@@ -35,7 +36,7 @@ def generate_prompt_for_first(source: str):
     7살짜리 아이를 위한 동화를 작성하게 될거야. 총 10페이지의 동화를 작성하게 될거야."""},
         {"role": "user", "content": f'''지금까지의 이야기: ```{source}```
 
-    너는 총 10문단 중 1번째 문단을 작성해야 하고, 총 1개의 다음 문단 후보를 작성해줘. 답변해줘야 할 format은 다음과 같아.
+    너는 총 10문단 중 1번째 문단을 작성해야 하고, 총 1개의 다음 문단 후보를 50자 이내로 작성해줘. 답변해줘야 할 format은 다음과 같아.
     {{'후보_1':"",
     }}
          '''}
@@ -73,7 +74,7 @@ async def test_generator(messages):
         if chunk.choices[0].delta.function_call is not None and chunk.choices[0].delta.function_call.arguments is not None:
 
             output += chunk.choices[0].delta.function_call.arguments
-            print(output)
+            #print(output)
 
             try:
                 output_change = output + '"}'
@@ -89,7 +90,7 @@ async def test_generator(messages):
                     full_length = len(output_change['후보_1'])
                     data = {"option1": str(output_change['후보_1'][pre_length:full_length])}
                     json_data = json.dumps(data)
-                    print(f"data: {json_data}\n\n")
+                    #print(f"data: {json_data}\n\n")
                     yield f"data: {json_data}\n\n"
                     pre_length = full_length
 
@@ -100,7 +101,7 @@ async def test_generator(messages):
                     full_length = len(output_change['후보_2'])
                     data = {"option2": str(output_change['후보_2'][pre_length:full_length])}
                     json_data = json.dumps(data)
-                    print(f"data: {json_data}\n\n")
+                    #print(f"data: {json_data}\n\n")
                     yield f"data: {json_data}\n\n"
                     pre_length = full_length
             except:
@@ -110,13 +111,13 @@ async def test_generator(messages):
                     full_length = len(output_change['후보_3'])
                     data = {"option3": str(output_change['후보_3'][pre_length:full_length])}
                     json_data = json.dumps(data)
-                    print(f"data: {json_data}\n\n")
+                    #print(f"data: {json_data}\n\n")
                     yield f"data: {json_data}\n\n"
                     pre_length = full_length
             except:
                 pass
 
-    print("data: [DONE]\n\n")
+    #print("data: [DONE]\n\n")
     yield "data: [DONE]\n\n"
 
 

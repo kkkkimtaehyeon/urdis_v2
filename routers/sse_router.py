@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from starlette.responses import StreamingResponse
 
 from ai_modules.gpt_work import test_generator
+from cruds.image_crud import update_generated_image_in_background
 from cruds.sse_crud import sse_init_story, sse_save_options_and_index, sse_confirm_contents
 from cruds.story_crud import generate_gpt_messages
 from schemas import Source, UserOptions, ContentsConfirm
@@ -18,8 +19,17 @@ async def initialize_stories(source: Source) -> str:
 
 
 @router.post("/api/sse/stories/{story_id}/pages/{current_page}/contents")
-async def post_selected_option_with_options(story_id: str, current_page: int, options: UserOptions):
+async def post_selected_option_with_options(story_id: str, current_page: int, options: UserOptions, background_tasks: BackgroundTasks):
+
+    content_options = options.options
+    index = options.selected_option_index
+
+    print(f"내용: {content_options[index]}")
+
     sse_save_options_and_index(story_id, current_page, options)
+    background_tasks.add_task(update_generated_image_in_background, story_id, content_options[index])
+
+    return {"message": "background working"}
 
 
 @router.get("/api/sse/stories/{story_id}/pages/{current_page}/contents")
@@ -35,40 +45,3 @@ async def confirm_story_contents(story_id: str, contents_confirm: ContentsConfir
     sse_confirm_contents(story_id, contents_list)
 
     return story_id
-
-#
-# @router.get("/api/sse/stories/{story_id}/pages/{page_index}/images")
-# async def show_images(story_id: str, page_index: int):
-#     content, images = sse_show_images(story_id, page_index)
-#
-#     return {
-#         "content": content,
-#         "images": images
-#     }
-#
-#
-# class ImagesSelect(BaseModel):
-#     selected_images: List[str]
-#
-#
-# @router.post("/api/sse/stories/{story_id}/images")
-# async def selected_image(story_id: str, image_select: ImagesSelect):
-#     story = story_collection.find_one_and_update(
-#         {"_id": ObjectId(story_id)},
-#         {"$set": {"images": image_select.selected_images}})
-#
-#     # 아직 이미지 하나만 뽑음, 여러 개 뽑게 수정 필요
-#     #cover_images = generate_cover_images(story['contents'])
-#
-#     cover_images = ["https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/one.png",
-#                              "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/two.png",
-#                              "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/three.png",
-#                              "https://urdis-bucket.s3.ap-northeast-2.amazonaws.com/four.png"]
-#
-#     story_meta_collection.update_one(
-#         {'_id': ObjectId(story['story_meta_id'])},
-#         {'$set': {'cover_images': cover_images}},
-#         upsert=True
-#     )
-#
-#     return story_id
