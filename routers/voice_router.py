@@ -3,6 +3,7 @@ from typing import Dict, List
 from fastapi import APIRouter, Form, UploadFile, File
 
 from cruds.voice_crud import fetch_voices, create_voice, attach_voice_on_story
+
 router = APIRouter(tags=['voice'])
 
 
@@ -30,7 +31,7 @@ async def post_new_voice(name: str = Form(...),
 
 
 @router.post("/api/stories/{story_id}/voices/{voice_id}")
-async def apply_voice_on_story(story_id: str, voice_id: str):
+async def apply_voice_on_story(story_id: str, voice_id: str = None):  # 선택적 voice_id
     attach_voice_on_story(story_id, voice_id)
 
     return story_id

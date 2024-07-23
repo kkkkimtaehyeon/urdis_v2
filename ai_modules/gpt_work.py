@@ -10,10 +10,6 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 CLIENT = OpenAI(api_key=OPENAI_API_KEY)
 
 
-def concat_contents(contents: List[str]):
-    return ', '.join(contents)
-
-
 def generate_prompt(contents: List[str], page: int):
     history = " ,".join(contents)
     return [
@@ -21,7 +17,7 @@ def generate_prompt(contents: List[str], page: int):
     7살짜리 아이를 위한 동화를 작성하게 될거야. 총 10페이지의 동화를 작성하게 될거야."""},
         {"role": "user", "content": f'''지금까지의 이야기: ```{history}```
 
-    너는 총 10문단 중 {page}번째 문단을 작성해야 하고, 총 3개의 다음 문단 후보를 50자 이내로 작성해줘. 답변해줘야 할 format은 다음과 같아.
+    너는 총 10문단 중 {page}번째 문단을 작성해야 하고, 총 3개의 다음 문단 후보를 작성해줘. 답변해줘야 할 format은 다음과 같아.
     
     {{'후보_1':"",
     '후보_2':"",
@@ -36,7 +32,7 @@ def generate_prompt_for_first(source: str):
     7살짜리 아이를 위한 동화를 작성하게 될거야. 총 10페이지의 동화를 작성하게 될거야."""},
         {"role": "user", "content": f'''지금까지의 이야기: ```{source}```
 
-    너는 총 10문단 중 1번째 문단을 작성해야 하고, 총 1개의 다음 문단 후보를 50자 이내로 작성해줘. 답변해줘야 할 format은 다음과 같아.
+    너는 총 10문단 중 1번째 문단을 작성해야 하고, 총 1개의 다음 문단 후보를 작성해줘. 답변해줘야 할 format은 다음과 같아.
     {{'후보_1':"",
     }}
          '''}
@@ -71,7 +67,8 @@ async def test_generator(messages):
     )
     pre_length = 0
     for chunk in response:
-        if chunk.choices[0].delta.function_call is not None and chunk.choices[0].delta.function_call.arguments is not None:
+        if chunk.choices[0].delta.function_call is not None and chunk.choices[
+            0].delta.function_call.arguments is not None:
 
             output += chunk.choices[0].delta.function_call.arguments
             #print(output)
@@ -122,7 +119,7 @@ async def test_generator(messages):
 
 
 def generate_summary_prompt(contents: List[str]):
-    full_story = concat_contents(contents)
+    full_story = ",".join(contents)
 
     return [
         {"role": "system", "content": """너는 동화삽화 제작을 위해 한문장으로 내용을 요약해주는 AI야."""},

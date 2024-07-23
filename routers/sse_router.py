@@ -2,7 +2,7 @@ from fastapi import APIRouter, BackgroundTasks
 from starlette.responses import StreamingResponse
 
 from ai_modules.gpt_work import test_generator
-from cruds.image_crud import update_generated_image_in_background
+from cruds.image_crud import update_generated_image_in_background, update_cover_image_in_background
 from cruds.sse_crud import sse_init_story, sse_save_options_and_index, sse_confirm_contents
 from cruds.story_crud import generate_gpt_messages
 from schemas import Source, UserOptions, ContentsConfirm
@@ -40,8 +40,11 @@ async def get_options_with_sse(story_id: str, current_page: int):
 
 
 @router.post("/api/sse/stories/{story_id}/contents")
-async def confirm_story_contents(story_id: str, contents_confirm: ContentsConfirm) -> str:
+async def confirm_story_contents(story_id: str, contents_confirm: ContentsConfirm, background_tasks: BackgroundTasks) -> str:
     contents_list = contents_confirm.contents
     sse_confirm_contents(story_id, contents_list)
+
+    # 백그라운드에서 표지 이미지 생성
+    background_tasks.add_task(update_cover_image_in_background, story_id, contents_list, 2)
 
     return story_id

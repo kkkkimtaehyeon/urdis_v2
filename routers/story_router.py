@@ -8,7 +8,6 @@ from schemas import StoryFinalizer
 
 _ = load_dotenv(find_dotenv())
 router = APIRouter(tags=["story"])
-dummy_text2 = "안녕하세요! 저는 인공지능 언어모델인 GPT-3입니다."
 
 
 @router.get("/api/stories")  # 전체 동화 조회

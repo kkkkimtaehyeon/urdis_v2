@@ -40,8 +40,9 @@ def sse_confirm_contents(story_id: str, contents_list: List[str]):
 
     while True:
         story_meta = story_meta_collection.find_one({"_id": ObjectId(story['story_meta_id'])})
+        print(f"images 길이: {len(story_meta['images'])}")
 
-        if len(story_meta['images']) == 10:
+        if len(story_meta['images']) >= 10:
             break
 
         time.sleep(500)

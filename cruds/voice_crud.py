@@ -34,28 +34,39 @@ def create_voice(name: str, image_file: UploadFile, sample_prompt: str, model: s
 
 def attach_voice_on_story(story_id: str, voice_id: str):
     story = story_collection.find_one({"_id": ObjectId(story_id)})
-    voice = voice_collection.find_one({"_id": ObjectId(voice_id)})
-
-    voice_model = voice["voice_model"]
-    contents_list = story["contents"]
-
-    #페이지의 내용을 음성으로 변홚
     contents_voices = []
 
-    for content in contents_list:
-        audio = text_to_speech(text=content, voice_name=voice_model)
-        uploaded_audio_url = s3.upload_audio_on_s3(audio, str(story['_id']))
-        contents_voices.append(uploaded_audio_url)
+    if voice_id is not None:
+        voice = voice_collection.find_one({"_id": ObjectId(voice_id)})
 
-    # 더미데이터
-    #contents_voices = [f"voice_url{i}" for i in range(10)]
+        voice_model = voice["voice_model"]
+        contents_list = story["contents"]
+
+        #페이지의 내용을 음성으로 변홚
+
+
+        for content in contents_list:
+            audio = text_to_speech(text=content, voice_name=voice_model)
+            uploaded_audio_url = s3.upload_audio_on_s3(audio, str(story['_id']))
+            contents_voices.append(uploaded_audio_url)
+
+        # 더미데이터
+        #contents_voices = [f"voice_url{i}" for i in range(10)]
+
+        story_collection.update_one(
+            {"_id": ObjectId(story_id)},
+            {"$set": {
+                "contents_voices": contents_voices,
+                "voice_model": voice_model
+                }
+            }
+        )
 
     story_collection.update_one(
-        {"_id": ObjectId(story_id)},
-        {"$set": {
-            "contents_voices": contents_voices,
-            "voice_model": voice_model
+            {"_id": ObjectId(story_id)},
+            {"$set": {
+                "contents_voices": contents_voices,
+                "voice_model": None
+                }
             }
-        }
-    )
-
+        )

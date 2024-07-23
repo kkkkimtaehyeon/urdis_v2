@@ -102,7 +102,6 @@ def generate_gpt_messages(story_id: str, current_page: int):
     story = story_collection.find_one({"_id": ObjectId(story_id)})
     story_meta = story_meta_collection.find_one({"_id": ObjectId(story['story_meta_id'])})
 
-
     if current_page > 1:
         contents_options = story_meta['contents']
         selected_content_options = story_meta['selected_content_option']

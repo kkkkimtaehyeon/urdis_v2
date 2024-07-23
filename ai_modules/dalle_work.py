@@ -28,16 +28,30 @@ def generate_image(prompt: str):
     return response.data[0].url
 
 
-def download_image_from_url(urls: List[str]):
-    image_datas = []
-    for url in urls:
-        response = requests.get(url)
-        if response.status_code == 200:
-            image_datas.append(response.content)  # 이미지 데이터 반환
-        else:
-            raise Exception(f"Failed to download image from {url}. Status code: {response.status_code}")
+def generate_cover_image(summary: str):
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=f"다음 내용에 맞는 동화의 표지를 그려줘: {summary}",
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
 
-    return image_datas
+    return response.data[0].url
+
+
+
+# def download_image_from_url(urls: List[str]):
+#     image_datas = []
+#     for url in urls:
+#         response = requests.get(url)
+#         if response.status_code == 200:
+#             image_datas.append(response.content)  # 이미지 데이터 반환
+#         else:
+#             raise Exception(f"Failed to download image from {url}. Status code: {response.status_code}")
+#
+#     return image_datas
+
 
 # 이미지 url에서 이미지 데이터 추출
 def get_data_from_url(url: str):
@@ -51,28 +65,16 @@ def get_data_from_url(url: str):
     return image_data
 
 
-
-def generate_images_from_contents(contents: List[str]):
-
-    contents_images = []
-
-    for content in contents:
-        img_datas = download_image_from_url(generate_image(content))
-        img_urls = [s3.upload_image_on_s3(img_data) for img_data in img_datas]
-        contents_images.append(img_urls)
-
-    return contents_images
-
-
-def generate_cover_images(summary: str):
-    urls = []
-
-    for _ in range(0, 2):
-        urls.append(generate_image(summary))
-
-    img_datas = download_image_from_url(urls)
-
-    return [s3.upload_image_on_s3(img_data) for img_data in img_datas]
+# def generate_images_from_contents(contents: List[str]):
+#
+#     contents_images = []
+#
+#     for content in contents:
+#         img_datas = download_image_from_url(generate_image(content))
+#         img_urls = [s3.upload_image_on_s3(img_data) for img_data in img_datas]
+#         contents_images.append(img_urls)
+#
+#     return contents_images
 
 
 def test_generator(prompt: str):
